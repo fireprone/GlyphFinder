@@ -29,15 +29,19 @@ import org.opencv.core.Core;
 import org.opencv.core.Core.MinMaxLocResult;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Scalar;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.Random;
 
-class MatchingDemo extends AppCompatActivity {
+public class MatchingDemo extends AppCompatActivity {
 
     private final String TAG = "MatchingDemo::Activity";
     private Bitmap bMapImg;
@@ -45,8 +49,9 @@ class MatchingDemo extends AppCompatActivity {
     private Uri photoUri;
     private String currentPhotoPath;
     private static Display display;
-    static final int REQUEST_IMAGE_CAPTURE = 1;
-    static final int REQUEST_TEMPLATE_CHOOSE = 2;
+    static final int REQUEST_IMAGE_CAPTURE = 1,
+            REQUEST_TEMPLATE_CHOOSE = 2,
+            REQUEST_IMAGE_CHOOSE = 3;
 
     //Loads OpenCV
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
@@ -96,6 +101,25 @@ class MatchingDemo extends AppCompatActivity {
             //Finally, match template
             matchCV(iv);
         }
+        //Result from ImageChooser
+        if(requestCode == REQUEST_IMAGE_CHOOSE && resultCode == RESULT_OK) {
+            String result = data.getStringExtra("result");
+
+            if(result.equals("card1")) {
+                bMapImg = decodeSampledBitmapFromResource(getResources(), R.drawable.card1, 300, 300);
+            } else if(result.equals("card2")) {
+                bMapImg = decodeSampledBitmapFromResource(getResources(), R.drawable.card2, 300, 300);
+            } else if(result.equals("card3")) {
+                bMapImg = decodeSampledBitmapFromResource(getResources(), R.drawable.card3, 300, 300);
+            } else {
+                bMapImg = decodeSampledBitmapFromResource(getResources(), R.drawable.card4, 300, 300);
+            }
+
+            bMapImg = rotateBitmap(bMapImg, 90);
+            ImageView iv = findViewById(R.id.image_view);
+            iv.setImageBitmap(bMapImg);
+        }
+
     }
 
     @Override
@@ -113,8 +137,8 @@ class MatchingDemo extends AppCompatActivity {
         iv.setImageBitmap(bMapImg);
 
         //-- Button to get template
-        Button templateMatch = findViewById(R.id.matchbutton);
-        templateMatch.setOnClickListener(new View.OnClickListener() {
+        Button matchButton = findViewById(R.id.matchbutton);
+        matchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent chooseIntent = new Intent(getApplicationContext(), TemplChooser.class);
@@ -123,11 +147,21 @@ class MatchingDemo extends AppCompatActivity {
         });
 
         //-- Button to get image from camera
-        Button imageMatch = findViewById(R.id.imagebutton);
-        imageMatch.setOnClickListener(new View.OnClickListener() {
+        Button imageButton = findViewById(R.id.imagebutton);
+        imageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 dispatchTakePictureIntent();
+            }
+        });
+
+        //-- Button to change demo card
+        Button cardButton = findViewById(R.id.cardbutton);
+        cardButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent chooseIntent = new Intent(getApplicationContext(), ImageChooser.class);
+                startActivityForResult(chooseIntent, REQUEST_IMAGE_CHOOSE);
             }
         });
     }
